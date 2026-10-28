@@ -1,53 +1,67 @@
-from dataclasses import dataclass
 import requests
 
 
-@dataclass
 class Brewery:
-    id: str
-    name: str
-    brewery_type: str
-    address_1: str | None
-    address_2: str | None
-    address_3: str | None
-    city: str | None
-    state_province: str | None
-    postal_code: str | None
-    country: str | None
-    longitude: str | None
-    latitude: str | None
-    phone: str | None
-    website_url: str | None
-    state: str | None
-    street: str | None
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        brewery_type: str,
+        address_1: str | None,
+        address_2: str | None,
+        address_3: str | None,
+        city: str | None,
+        state_province: str | None,
+        postal_code: str | None,
+        country: str | None,
+        longitude: float | str | None,
+        latitude: float | str | None,
+        phone: str | None,
+        website_url: str | None,
+        state: str | None,
+        street: str | None,
+    ) -> None:
+        self.id: str = id
+        self.name: str = name
+        self.brewery_type: str = brewery_type
+        self.address_1: str | None = address_1
+        self.address_2: str | None = address_2
+        self.address_3: str | None = address_3
+        self.city: str | None = city
+        self.state_province: str | None = state_province
+        self.postal_code: str | None = postal_code
+        self.country: str | None = country
+        self.longitude: float | str | None = longitude
+        self.latitude: float | str | None = latitude
+        self.phone: str | None = phone
+        self.website_url: str | None = website_url
+        self.state: str | None = state
+        self.street: str | None = street
 
     def __str__(self) -> str:
-        lokalizacja = (
-            f"{self.city or 'Brak miasta'}, "
-            f"{self.country or 'Brak kraju'}"
-        )
-        strona = self.website_url or "brak strony"
         return (
-            f"[{self.brewery_type.upper()}] {self.name} "
-            f"({lokalizacja}) | WWW: {strona}"
+            f"Brewery(id={self.id}, name={self.name}, "
+            f"type={self.brewery_type}, city={self.city}, "
+            f"state={self.state}, country={self.country}, "
+            f"street={self.street}, postal_code={self.postal_code}, "
+            f"phone={self.phone}, website_url={self.website_url})"
         )
 
 
-def pobierz_browary() -> list[Brewery]:
-    url = "https://api.openbrewerydb.org/v1/breweries"
-    parametry = {"per_page": 20}
+def fetch_breweries(limit: int = 20) -> list[Brewery]:
+    url: str = "https://api.openbrewerydb.org/v1/breweries"
+    params: dict[str, int] = {"per_page": limit}
 
-    odpowiedz = requests.get(url, params=parametry, timeout=10)
-    odpowiedz.raise_for_status()
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    data = response.json()
 
-    dane_json = odpowiedz.json()
-
-    lista_browarow: list[Brewery] = []
-    for item in dane_json:
-        browar = Brewery(
-            id=item.get("id"),
-            name=item.get("name"),
-            brewery_type=item.get("brewery_type"),
+    breweries: list[Brewery] = []
+    for item in data:
+        brewery = Brewery(
+            id=item.get("id", ""),
+            name=item.get("name", ""),
+            brewery_type=item.get("brewery_type", ""),
             address_1=item.get("address_1"),
             address_2=item.get("address_2"),
             address_3=item.get("address_3"),
@@ -62,11 +76,13 @@ def pobierz_browary() -> list[Brewery]:
             state=item.get("state"),
             street=item.get("street"),
         )
-        lista_browarow.append(browar)
+        breweries.append(brewery)
 
-    return lista_browarow
+    return breweries
 
 
-browary = pobierz_browary()
-for browar in browary:
-    print(browar)
+if __name__ == "__main__":
+    breweries_list: list[Brewery] = fetch_breweries(20)
+    for brewery in breweries_list:
+        print(brewery)
+
